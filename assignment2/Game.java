@@ -10,6 +10,7 @@ public class Game {
     boolean invalidGuess = false;
     Scanner scanner = new Scanner(System.in);
     Player player1 = new Player();
+    Board board = new Board();
     private String gameStart = "Welcome to Mastermind. Here are the rules.\n\n"
             + "This is a text version of the classic board game Mastermind. "
             + "The computer will think of a secret code. The code consists of ";
@@ -31,7 +32,7 @@ public class Game {
         this.testingMode = testingMode;
     }
 
-    public void runGame(Board board){
+    public void runGame(){
         //Game initial greeting
         System.out.print(gameStart + GameConfiguration.pegNumber + gameStart2 + GameConfiguration.guessNumber + gameStart3);
 
@@ -55,28 +56,44 @@ public class Game {
         }
 
         //Holds result pegs
-        ArrayList<Integer> resultsList = new ArrayList<Integer>();
+        ArrayList<Integer> resultsList = new ArrayList<>();
         resultsList.add(0);
         resultsList.add(0);
 
-        if(testingMode){
-            System.out.print("The secret code is: ");
-            System.out.println(board.secretCode);
+        while(true) {
+            board.SetCodePegList();
+            GameLoop(board, resultsList);
+            if(!NextGamePrompt(readyCheck)) {
+              break;
+            }
+            board.guessesLeft = GameConfiguration.guessNumber;
+            board.secretCode = SecretCodeGenerator.getInstance().getNewSecretCode().toCharArray();
+            resultsList.set(0, 0);
+            resultsList.set(1, 0);
+            player1.history.setLength(0);
         }
 
+    }
+
+
+
+    public void GameLoop(Board board, ArrayList<Integer> resultsList){
+        //Show secret code if in testing mode
+        System.out.print("Generating secret code ...");
+        if(testingMode){
+            System.out.print(" The secret code is: ");
+            System.out.println(board.secretCode);
+        }
+        System.out.print("\n");
+
         //Enter game loop
-        for(int k = 0; k < GameConfiguration.guessNumber; k++){
+        while(board.guessesLeft != 0){
+            invalidGuess = false;
 
             //Guessed right, game is finished
-            if(resultsList.get(0) == 4){
-                //change this later
-                System.out.println("GAME WON!");
-            }
-
-            //Out of guesses
-            if(board.guessesLeft == 0){
-                //change this later
-                System.out.println("Yoo looz boo hoo");
+            if(resultsList.get(0) == board.pegsInCode){
+                System.out.println("You win !!");
+                return;
             }
 
             //Guess prompt
@@ -86,6 +103,10 @@ public class Game {
             String UGuess = scanner.nextLine();
             char [] userGuess = UGuess.toCharArray();
 
+            if(UGuess.equals("HISTORY")){
+                System.out.println(player1.history);
+                continue;
+            }
             //Check for invalid input
             if(UGuess.length() != board.pegsInCode){
                 invalidGuess = true;
@@ -95,6 +116,15 @@ public class Game {
                     if (91 < userGuess[i] || userGuess[i] < 64) {
                         invalidGuess = true;
                         break;
+                    }
+                    for(int j = 0; j < GameConfiguration.colors.length; j++){
+                        if(userGuess[i] == GameConfiguration.colors[j].charAt(0)){
+                            invalidGuess = false;
+                            break;
+                        }
+                        else{
+                            invalidGuess = true;
+                        }
                     }
                 }
             }
@@ -107,46 +137,40 @@ public class Game {
                 //Convert user guess to list of pegs
                 player1.setUserGuessArray(userGuess);
 
+                //Calculate guess
                 board.GuessCalculator(player1.userGuessArray, resultsList);
+
+                player1.history.append(UGuess);
+                player1.history.append("\t\tResult: ");
+                player1.history.append(resultsList.get(0)).append("B").append("_").append(resultsList.get(1)).append("W").append("\n");
                 System.out.print(userGuess);
                 System.out.println("\t\t" + "Result: " + resultsList.get(0) + "B" + "_" + resultsList.get(1) + "W" + "\n");
-                board.guessesLeft -= 1;
+
                 //set pegs back to valid for next round
                 board.BackToValid();
                 player1.BackToValid();
-
+                board.guessesLeft -= 1;
             }
         }
 
-        return;
+        //Out of guesses
+        System.out.println("Sorry, you are out of guesses. You lose, boo-hoo.");
     }
 
-//    public void GuessCalculator(ArrayList<Peg> usersGuess, ArrayList<Peg> secretCode, ArrayList<Integer> returnList){
-//        int black = 0;
-//        int white = 0;
-//
-//        //check for correct color and position (black)
-//        for(int i = 0; i < GameConfiguration.pegNumber; i++){
-//            if(usersGuess.get(i).isEqual(secretCode.get(i))){
-//                black += 1;
-//                usersGuess.get(i).valid = false;
-//                secretCode.get(i).valid = false;
-//            }
-//        }
-//
-//        //check for correct color wrong position (white)
-//        for(int i = 0; i < GameConfiguration.pegNumber; i++){
-//            for(int j = 0; j < GameConfiguration.pegNumber; j++){
-//                if(usersGuess.get(i).color == secretCode.get(j).color & usersGuess.get(i).valid & secretCode.get(j).valid){
-//                    white += 1;
-//                    usersGuess.get(i).valid = false;
-//                    secretCode.get(j).valid = false;
-//                }
-//            }
-//        }
-//        returnList.set(0, black);
-//        returnList.set(1, white);
-//    }
-
+    public Boolean NextGamePrompt(String readyCheck){
+        System.out.println("\nAre you ready for another game (Y/N): ");
+        readyCheck = scanner.nextLine();
+        while(!readyCheck.equals("Y")){
+            if(readyCheck.equals("N")){
+                return false;
+            }
+            else{
+                System.out.println("Invalid input, try again");
+                System.out.println("\nAre you ready for another game (Y/N): ");
+            }
+            readyCheck = scanner.nextLine();
+        }
+        return true;
+    }
 
 }

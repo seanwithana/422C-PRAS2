@@ -3,8 +3,6 @@ package assignment2;
 import java.util.ArrayList;
 
 public class Board {
-    public String history;
-
     //put secret code here
     char [] secretCode = SecretCodeGenerator.getInstance().getNewSecretCode().toCharArray();
 
@@ -18,16 +16,21 @@ public class Board {
     ArrayList<Peg> codeArray = new ArrayList<Peg>();
 
     public Board(){
-        //Convert secret code to list of pegs
-        for(int i = 0;i < pegsInCode; i++){
-            Peg tempPeg = new Peg(secretCode[i], i);
+        for(int i = 0; i < pegsInCode; i++){
+            Peg tempPeg = new Peg('c', i);
             codeArray.add(tempPeg);
         }
     }
 
+    public void SetCodePegList(){
+        //Convert secret code to list of pegs
+        for(int i = 0;i < pegsInCode; i++){
+            Peg tempPeg = new Peg(secretCode[i], i);
+            codeArray.set(i, tempPeg);
+        }
+    }
 
 
-    //////////////////////////////////////NEEDS FIXING SOMETHING IS WRONG
     public void GuessCalculator(ArrayList<Peg> usersGuess, ArrayList<Integer> returnList){
         int black = 0;
         int white = 0;
