@@ -2,11 +2,17 @@ package assignment2;
 
 import java.util.Random;
 
+/**
+ This class generates the secret code for the player to guess.
+ @author Seana Aghili
+ Class/Section: EE422C/17095
+ Assignment 2
+ @version 1.51 2021-02-28
+ */
 
 public class SecretCodeGenerator {
     private static SecretCodeGenerator instance = new SecretCodeGenerator();
     public static SecretCodeGenerator getInstance() { return instance; }
-
 
     private Random randomGenerator;
 
